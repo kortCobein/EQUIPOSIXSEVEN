@@ -21,7 +21,8 @@ data class PerfilDemo(
     val descripcion: String,
     val usuarioApi: String,
     val claveApi: String,
-    val rol: RolUsuario
+    val rol: RolUsuario,
+    val avatarRes: Int = 0
 )
 
 /** Sesión persistida localmente después de una autenticación correcta. */

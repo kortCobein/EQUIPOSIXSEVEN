@@ -1,5 +1,6 @@
 package com.example.equiposixseven
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -16,13 +18,21 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Diamond
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Man
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Woman
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -33,8 +43,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -113,20 +125,15 @@ fun PantallaCatalogo(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    "Catálogo",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    "Explora el inventario disponible",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                "Catálogo",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Black
+            )
             IconButton(
                 onClick = { alcance.launch { cargar(categoriaSeleccionada) } },
                 enabled = !cargando
@@ -135,40 +142,54 @@ fun PantallaCatalogo(
             }
         }
 
-        // Búsqueda local: mejora la UX sin generar peticiones innecesarias por cada letra.
+        // Búsqueda local sin peticiones redundantes
         OutlinedTextField(
             value = busqueda,
             onValueChange = { busqueda = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 14.dp),
+                .padding(top = 10.dp),
             label = { Text("Buscar producto") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             singleLine = true,
             shape = RoundedCornerShape(16.dp)
         )
 
-        // Chips horizontales: permiten cambiar de categoría sin ocultar el catálogo.
+        // Barra de filtros con iconos elegantes sin textos recargados
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
                 .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             val categorias = listOf("Todos") + AlmacenAplicacion.categorias
             categorias.forEach { categoria ->
-                FilterChip(
-                    selected = categoriaSeleccionada == categoria,
+                val seleccionada = categoriaSeleccionada == categoria
+                IconButton(
                     onClick = {
                         if (categoriaSeleccionada != categoria) {
                             categoriaSeleccionada = categoria
                             alcance.launch { cargar(categoria) }
                         }
                     },
-                    label = { Text(categoria.replaceFirstChar { it.uppercase() }) },
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            if (seleccionada) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        ),
                     enabled = !cargando
-                )
+                ) {
+                    Icon(
+                        imageVector = iconoParaCategoria(categoria),
+                        contentDescription = categoria,
+                        tint = if (seleccionada) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 
@@ -190,16 +211,27 @@ fun PantallaCatalogo(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(productosVisibles, key = { it.id }) { producto ->
-                    TarjetaProducto(producto = producto, onClick = { onAbrirProducto(producto.id) })
+                    TarjetaProducto(
+                        producto = producto,
+                        onClick = { onAbrirProducto(producto.id) },
+                        onAgregarAlCarrito = {
+                            AlmacenAplicacion.agregarAlCarrito(producto, 1)
+                            onMensaje("${producto.titulo.take(24)}… agregado al carrito")
+                        }
+                    )
                 }
             }
         }
     }
 }
 
-/** Tarjeta visual del catálogo; muestra imagen, título, precio y categoría. */
+/** Tarjeta visual con botón directo para añadir al carrito con un solo toque. */
 @Composable
-private fun TarjetaProducto(producto: Producto, onClick: () -> Unit) {
+private fun TarjetaProducto(
+    producto: Producto,
+    onClick: () -> Unit,
+    onAgregarAlCarrito: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -231,14 +263,45 @@ private fun TarjetaProducto(producto: Producto, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-                Text(
-                    "$${String.format(Locale.US, "%.2f", producto.precio)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "$${String.format(Locale.US, "%.2f", producto.precio)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Black
+                    )
+                    FilledIconButton(
+                        onClick = onAgregarAlCarrito,
+                        modifier = Modifier.size(36.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddShoppingCart,
+                            contentDescription = "Agregar al carrito",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             }
         }
     }
+}
+
+/** Retorna un icono representativo según la categoría. */
+private fun iconoParaCategoria(categoria: String): ImageVector = when (categoria.lowercase(Locale.ROOT)) {
+    "todos" -> Icons.Default.GridView
+    "electronics" -> Icons.Default.Devices
+    "jewelery" -> Icons.Default.Diamond
+    "men's clothing" -> Icons.Default.Man
+    "women's clothing" -> Icons.Default.Woman
+    else -> Icons.Default.Category
 }

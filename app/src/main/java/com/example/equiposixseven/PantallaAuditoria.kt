@@ -1,5 +1,8 @@
 package com.example.equiposixseven
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,16 +11,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +34,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -95,26 +105,47 @@ fun PantallaAuditoria(
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Black
         )
-        Text(
-            "Consulta de solo lectura",
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
 
-        // Dos vistas de lectura dentro del mismo módulo: usuarios y carritos globales.
+        // Selector con iconos elegantes para Usuarios y Carritos
         Row(
             modifier = Modifier.padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            FilterChip(
-                selected = seccionUsuarios,
+            IconButton(
                 onClick = { seccionUsuarios = true },
-                label = { Text("Usuarios") }
-            )
-            FilterChip(
-                selected = !seccionUsuarios,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        if (seccionUsuarios) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Group,
+                    contentDescription = "Usuarios",
+                    tint = if (seccionUsuarios) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
                 onClick = { seccionUsuarios = false },
-                label = { Text("Carritos") }
-            )
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        if (!seccionUsuarios) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Carritos",
+                    tint = if (!seccionUsuarios) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         when {
@@ -129,25 +160,36 @@ fun PantallaAuditoria(
     }
 }
 
-/** US11: nombre completo, correo, teléfono y username de cada cuenta. */
+/** US11: nombre completo, correo, teléfono y username con foto de perfil IA. */
 @Composable
 private fun ListaUsuariosAuditoria() {
     if (AlmacenAplicacion.usuariosAuditoria.isEmpty()) {
-        EstadoVacio("Sin usuarios", "La API no devolvió cuentas para mostrar.")
+        EstadoVacio("Sin usuarios", "No hay cuentas disponibles para mostrar.")
         return
     }
 
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         items(AlmacenAplicacion.usuariosAuditoria, key = { it.id }) { usuario ->
+            val avatarRes = PerfilesDemo.avatarPorId(usuario.id)
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(18.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                    Image(
+                        painter = painterResource(avatarRes),
+                        contentDescription = usuario.usuario,
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .border(1.5.dp, MaterialTheme.colorScheme.secondary, CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
                     Column {
                         Text(
                             "${usuario.nombre.nombre.replaceFirstChar { it.uppercase() }} ${usuario.nombre.apellido.replaceFirstChar { it.uppercase() }}",

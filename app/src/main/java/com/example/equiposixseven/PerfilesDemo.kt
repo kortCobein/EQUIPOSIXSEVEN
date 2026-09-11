@@ -20,26 +20,29 @@ object PerfilesDemo {
         PerfilDemo(
             idUsuario = 1,
             nombreVisible = "Administrador",
-            descripcion = "Gestiona catálogo y consulta auditorías.",
+            descripcion = "Gestiona catálogo y auditorías",
             usuarioApi = "johnd",
             claveApi = "m38rmF$",
-            rol = RolUsuario.ADMINISTRADOR
+            rol = RolUsuario.ADMINISTRADOR,
+            avatarRes = R.drawable.avatar_admin
         ),
         PerfilDemo(
             idUsuario = 4,
             nombreVisible = "Cliente",
-            descripcion = "Explora productos y administra su carrito.",
+            descripcion = "Explora y compra en el catálogo",
             usuarioApi = "donero",
             claveApi = "ewedon",
-            rol = RolUsuario.CLIENTE
+            rol = RolUsuario.CLIENTE,
+            avatarRes = R.drawable.avatar_cliente
         ),
         PerfilDemo(
             idUsuario = 3,
             nombreVisible = "Auditor",
-            descripcion = "Consulta usuarios y carritos en modo lectura.",
+            descripcion = "Monitorea usuarios y carritos",
             usuarioApi = "kevinryan",
             claveApi = "kev02937@",
-            rol = RolUsuario.AUDITOR
+            rol = RolUsuario.AUDITOR,
+            avatarRes = R.drawable.avatar_auditor
         )
     )
 
@@ -49,4 +52,14 @@ object PerfilesDemo {
         3 -> RolUsuario.AUDITOR
         else -> RolUsuario.CLIENTE
     }
+
+    /** Retorna el avatar nativo generado por IA según el rol. */
+    fun avatarPorRol(rol: RolUsuario): Int = when (rol) {
+        RolUsuario.ADMINISTRADOR -> R.drawable.avatar_admin
+        RolUsuario.CLIENTE -> R.drawable.avatar_cliente
+        RolUsuario.AUDITOR -> R.drawable.avatar_auditor
+    }
+
+    /** Retorna el avatar nativo generado por IA según el ID del usuario. */
+    fun avatarPorId(idUsuario: Int): Int = avatarPorRol(rolPorId(idUsuario))
 }

@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Remove
@@ -192,10 +196,27 @@ fun PantallaDetalleProducto(
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !agregando
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        enabled = !agregando,
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        if (agregando) CircularProgressIndicator(strokeWidth = 2.dp) else Text("Agregar al carrito")
+                        if (agregando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(Icons.Default.AddShoppingCart, contentDescription = "Agregar al carrito")
+                                Text("Agregar al carrito", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
 
@@ -203,23 +224,39 @@ fun PantallaDetalleProducto(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(top = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         OutlinedButton(
                             onClick = { editando = !editando },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(14.dp)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null)
-                            Text(if (editando) "Cancelar" else "Editar", modifier = Modifier.padding(start = 6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = "Editar")
+                                Text(if (editando) "Cerrar" else "Editar")
+                            }
                         }
                         OutlinedButton(
                             onClick = { confirmarEliminacion = true },
-                            modifier = Modifier.weight(1f),
-                            enabled = !eliminando
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            enabled = !eliminando,
+                            shape = RoundedCornerShape(14.dp)
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = null)
-                            Text("Eliminar", modifier = Modifier.padding(start = 6.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
+                                Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                            }
                         }
                     }
 
@@ -346,10 +383,28 @@ private fun FormularioEdicionCompacto(
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
-            enabled = !guardando
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 14.dp)
+                .height(50.dp),
+            enabled = !guardando,
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Text(if (guardando) "Guardando…" else "Guardar cambios")
+            if (guardando) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = "Guardar")
+                    Text("Guardar cambios", fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }

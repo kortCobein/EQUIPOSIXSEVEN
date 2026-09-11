@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.ShoppingCartCheckout
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -71,25 +72,30 @@ fun PantallaCarrito(
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Black
         )
-        Text(
-            "Ajusta cantidades antes de finalizar la simulación",
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
 
         if (AlmacenAplicacion.carrito.isEmpty()) {
             EstadoVacio(
-                titulo = "Tu carrito está vacío",
-                descripcion = "Explora el catálogo y agrega los productos que quieras probar.",
+                titulo = "Carrito vacío",
+                descripcion = "Añade artículos desde el catálogo para visualizarlos aquí.",
                 accion = "Explorar catálogo",
                 onAccion = onExplorarCatalogo
             )
-            // US10 exige conservar visible el flujo de pago, pero inhabilitado sin artículos.
+            // Botón inhabilitado sin artículos
             Button(
                 onClick = { },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = false
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                enabled = false,
+                shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Proceder al pago")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.ShoppingCartCheckout, contentDescription = null)
+                    Text("Pagar", fontWeight = FontWeight.Bold)
+                }
             }
         } else {
             LazyColumn(
@@ -173,13 +179,21 @@ fun PantallaCarrito(
                         fontWeight = FontWeight.Black
                     )
                     Button(
-                        onClick = { onMensaje("Pago fuera del alcance de este sprint. El carrito está listo.") },
+                        onClick = { onMensaje("El pedido ha sido preparado correctamente.") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        enabled = AlmacenAplicacion.carrito.isNotEmpty()
+                            .padding(top = 12.dp)
+                            .height(50.dp),
+                        enabled = AlmacenAplicacion.carrito.isNotEmpty(),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Proceder al pago")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.ShoppingCartCheckout, contentDescription = "Pagar")
+                            Text("Pagar", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

@@ -23,6 +23,7 @@ fun AplicacionSixSeven() {
     val snackbar = remember { SnackbarHostState() }
     val alcance = rememberCoroutineScope()
 
+    var modoOscuro by remember { mutableStateOf(false) }
     var sesion by remember { mutableStateOf(gestorSesion.leer()) }
     var seccion by remember { mutableStateOf(SeccionAplicacion.CATALOGO) }
     var productoSeleccionado by remember { mutableStateOf<Int?>(null) }
@@ -32,85 +33,92 @@ fun AplicacionSixSeven() {
         alcance.launch { snackbar.showSnackbar(mensaje) }
     }
 
-    if (sesion == null) {
-        PantallaAcceso { nuevaSesion ->
-            gestorSesion.guardar(nuevaSesion)
-            sesion = nuevaSesion
-            seccion = SeccionAplicacion.CATALOGO
-            productoSeleccionado = null
-        }
-        return
-    }
-
-    val usuario = sesion!!
-
-    Scaffold(
-        topBar = {
-            BarraSuperiorUT(
-                sesion = usuario,
-                onCerrarSesion = {
-                    // US02: se elimina persistencia, memoria sensible y estado de navegación.
-                    gestorSesion.limpiar()
-                    AlmacenAplicacion.limpiarDatosSesion()
-                    productoSeleccionado = null
+    TemaUT(modoOscuro = modoOscuro) {
+        if (sesion == null) {
+            PantallaAcceso(
+                modoOscuro = modoOscuro,
+                onAlternarModoOscuro = { modoOscuro = !modoOscuro },
+                onAccesoCorrecto = { nuevaSesion ->
+                    gestorSesion.guardar(nuevaSesion)
+                    sesion = nuevaSesion
                     seccion = SeccionAplicacion.CATALOGO
-                    sesion = null
+                    productoSeleccionado = null
                 }
             )
-        },
-        bottomBar = {
-            if (productoSeleccionado == null) {
-                BarraNavegacionUT(
-                    sesion = usuario,
-                    seccionActual = seccion,
-                    onSeleccionar = { destino ->
-                        seccion = destino
-                        productoSeleccionado = null
-                    }
-                )
-            }
-        },
-        snackbarHost = { SnackbarHost(snackbar) }
-    ) { relleno ->
-        val idProducto = productoSeleccionado
-        if (idProducto != null) {
-            PantallaDetalleProducto(
-                productoId = idProducto,
-                sesion = usuario,
-                padding = relleno,
-                onVolver = { productoSeleccionado = null },
-                onProductoEliminado = {
-                    productoSeleccionado = null
-                    seccion = SeccionAplicacion.CATALOGO
-                },
-                onMensaje = mostrarMensaje
-            )
         } else {
-            when (seccion) {
-                SeccionAplicacion.CATALOGO -> PantallaCatalogo(
-                    padding = relleno,
-                    onAbrirProducto = { productoSeleccionado = it },
-                    onMensaje = mostrarMensaje
-                )
+            val usuario = sesion!!
 
-                SeccionAplicacion.CARRITO -> PantallaCarrito(
-                    padding = relleno,
-                    sesion = usuario,
-                    onExplorarCatalogo = { seccion = SeccionAplicacion.CATALOGO },
-                    onMensaje = mostrarMensaje
-                )
+            Scaffold(
+                topBar = {
+                    BarraSuperiorUT(
+                        sesion = usuario,
+                        modoOscuro = modoOscuro,
+                        onAlternarModoOscuro = { modoOscuro = !modoOscuro },
+                        onCerrarSesion = {
+                            // US02: se elimina persistencia, memoria sensible y estado de navegación.
+                            gestorSesion.limpiar()
+                            AlmacenAplicacion.limpiarDatosSesion()
+                            productoSeleccionado = null
+                            seccion = SeccionAplicacion.CATALOGO
+                            sesion = null
+                        }
+                    )
+                },
+                bottomBar = {
+                    if (productoSeleccionado == null) {
+                        BarraNavegacionUT(
+                            sesion = usuario,
+                            seccionActual = seccion,
+                            onSeleccionar = { destino ->
+                                seccion = destino
+                                productoSeleccionado = null
+                            }
+                        )
+                    }
+                },
+                snackbarHost = { SnackbarHost(snackbar) }
+            ) { relleno ->
+                val idProducto = productoSeleccionado
+                if (idProducto != null) {
+                    PantallaDetalleProducto(
+                        productoId = idProducto,
+                        sesion = usuario,
+                        padding = relleno,
+                        onVolver = { productoSeleccionado = null },
+                        onProductoEliminado = {
+                            productoSeleccionado = null
+                            seccion = SeccionAplicacion.CATALOGO
+                        },
+                        onMensaje = mostrarMensaje
+                    )
+                } else {
+                    when (seccion) {
+                        SeccionAplicacion.CATALOGO -> PantallaCatalogo(
+                            padding = relleno,
+                            onAbrirProducto = { productoSeleccionado = it },
+                            onMensaje = mostrarMensaje
+                        )
 
-                SeccionAplicacion.INVENTARIO -> PantallaInventario(
-                    padding = relleno,
-                    sesion = usuario,
-                    onAbrirProducto = { productoSeleccionado = it },
-                    onMensaje = mostrarMensaje
-                )
+                        SeccionAplicacion.CARRITO -> PantallaCarrito(
+                            padding = relleno,
+                            sesion = usuario,
+                            onExplorarCatalogo = { seccion = SeccionAplicacion.CATALOGO },
+                            onMensaje = mostrarMensaje
+                        )
 
-                SeccionAplicacion.AUDITORIA -> PantallaAuditoria(
-                    padding = relleno,
-                    sesion = usuario
-                )
+                        SeccionAplicacion.INVENTARIO -> PantallaInventario(
+                            padding = relleno,
+                            sesion = usuario,
+                            onAbrirProducto = { productoSeleccionado = it },
+                            onMensaje = mostrarMensaje
+                        )
+
+                        SeccionAplicacion.AUDITORIA -> PantallaAuditoria(
+                            padding = relleno,
+                            sesion = usuario
+                        )
+                    }
+                }
             }
         }
     }

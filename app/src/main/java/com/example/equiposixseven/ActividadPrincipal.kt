@@ -15,9 +15,7 @@ class ActividadPrincipal : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TemaUT {
-                AplicacionSixSeven()
-            }
+            AplicacionSixSeven()
         }
     }
 }

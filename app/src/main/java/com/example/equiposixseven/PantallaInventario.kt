@@ -6,20 +6,26 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -75,23 +82,25 @@ fun PantallaInventario(
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "Inventario",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Black
+                Text(
+                    "Inventario",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Black
+                )
+                FilledIconButton(
+                    onClick = { mostrarFormulario = !mostrarFormulario },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (mostrarFormulario) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        "Alta y mantenimiento del catálogo",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) {
+                    Icon(
+                        imageVector = if (mostrarFormulario) Icons.Default.Close else Icons.Default.Add,
+                        contentDescription = if (mostrarFormulario) "Cerrar" else "Nuevo producto"
                     )
-                }
-                Button(onClick = { mostrarFormulario = !mostrarFormulario }) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Text(if (mostrarFormulario) "Cerrar" else "Nuevo", modifier = Modifier.padding(start = 6.dp))
                 }
             }
         }
@@ -156,16 +165,25 @@ fun PantallaInventario(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 12.dp),
-                            enabled = !guardando
+                                .padding(top = 14.dp)
+                                .height(50.dp),
+                            enabled = !guardando,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             if (guardando) {
                                 CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
                                     strokeWidth = 2.dp,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             } else {
-                                Text("Guardar producto")
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = "Guardar")
+                                    Text("Guardar", fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
@@ -185,8 +203,8 @@ fun PantallaInventario(
         if (AlmacenAplicacion.productos.isEmpty()) {
             item {
                 EstadoVacio(
-                    titulo = "Catálogo sin cargar",
-                    descripcion = "Abre primero el catálogo para descargar los productos o crea uno nuevo."
+                    titulo = "Sin productos",
+                    descripcion = "No hay productos registrados en este momento."
                 )
             }
         } else {
@@ -197,7 +215,8 @@ fun PantallaInventario(
                 ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(producto.titulo, fontWeight = FontWeight.SemiBold)
@@ -207,9 +226,8 @@ fun PantallaInventario(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        OutlinedButton(onClick = { onAbrirProducto(producto.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = null)
-                            Text("Gestionar", modifier = Modifier.padding(start = 4.dp))
+                        FilledTonalIconButton(onClick = { onAbrirProducto(producto.id) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar")
                         }
                     }
                 }

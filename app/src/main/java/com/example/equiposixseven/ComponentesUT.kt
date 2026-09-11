@@ -38,29 +38,63 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/** Encabezado reutilizable con identidad visual UT y acceso rápido a cerrar sesión. */
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+
+/** Encabezado reutilizable con avatar con IA, toggle de tema oscuro y acceso a cerrar sesión. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BarraSuperiorUT(
     sesion: UsuarioSesion,
+    modoOscuro: Boolean,
+    onAlternarModoOscuro: () -> Unit,
     onCerrarSesion: () -> Unit
 ) {
+    val avatarRes = PerfilesDemo.avatarPorRol(sesion.rol)
+
     TopAppBar(
         title = {
-            Column {
-                Text(
-                    text = "Equipo SixSeven",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Image(
+                    painter = painterResource(avatarRes),
+                    contentDescription = sesion.usuario,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, MaterialTheme.colorScheme.secondary, CircleShape),
+                    contentScale = ContentScale.Crop
                 )
-                Text(
-                    text = "${nombreRol(sesion.rol)} · ${sesion.usuario}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f)
-                )
+                Column {
+                    Text(
+                        text = "SixSeven",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "${nombreRol(sesion.rol)} · ${sesion.usuario}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                    )
+                }
             }
         },
         actions = {
+            IconButton(onClick = onAlternarModoOscuro) {
+                Icon(
+                    imageVector = if (modoOscuro) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = if (modoOscuro) "Modo claro" else "Modo oscuro",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
             IconButton(onClick = onCerrarSesion) {
                 Icon(
                     imageVector = Icons.Default.Logout,

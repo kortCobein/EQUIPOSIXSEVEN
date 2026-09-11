@@ -1,6 +1,8 @@
 package com.example.equiposixseven
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,12 +12,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -36,7 +42,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -44,12 +54,14 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 /**
- * US01 - Acceso simplificado para demostración.
- * El usuario elige un perfil y únicamente escribe la contraseña común: 1234.
- * Las credenciales reales de Fake Store API se usan internamente y nunca se muestran.
+ * Pantalla de autenticación y selección de perfil.
  */
 @Composable
-fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
+fun PantallaAcceso(
+    modoOscuro: Boolean = false,
+    onAlternarModoOscuro: () -> Unit = {},
+    onAccesoCorrecto: (UsuarioSesion) -> Unit
+) {
     val contexto = LocalContext.current
     val alcance = rememberCoroutineScope()
 
@@ -59,34 +71,41 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
     var cargando by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Al no usar un stack de navegación, el gesto atrás desde login no revela pantallas protegidas.
     BackHandler(enabled = false) { }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp, vertical = 30.dp),
+            .padding(horizontal = 22.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Fila superior con toggle de tema
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = onAlternarModoOscuro) {
+                Icon(
+                    imageVector = if (modoOscuro) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = if (modoOscuro) "Modo claro" else "Modo oscuro",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
         Text(
             text = "SIXSEVEN",
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Black
         )
-        Text(
-            text = "Demo académica · estilo UT",
-            color = MaterialTheme.colorScheme.secondary,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(
-            text = "Selecciona el perfil que deseas probar. Todos usan la contraseña 1234.",
-            modifier = Modifier.padding(top = 10.dp, bottom = 20.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
 
-        // 1) Selector visual: evita que el usuario tenga que memorizar usernames de prueba.
+        Spacer(Modifier.height(24.dp))
+
+        // Selector visual con fotos de perfil con IA
         PerfilesDemo.disponibles.forEach { perfil ->
             TarjetaPerfilDemo(
                 perfil = perfil,
@@ -97,10 +116,10 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
                     error = null
                 }
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
         }
 
-        // 2) Único dato manual del acceso: la contraseña común del demo.
+        // Campo de contraseña
         OutlinedTextField(
             value = clave,
             onValueChange = {
@@ -109,30 +128,22 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
+                .padding(top = 10.dp),
             label = { Text("Contraseña") },
             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
             trailingIcon = {
                 IconButton(onClick = { mostrarClave = !mostrarClave }) {
                     Icon(
                         imageVector = if (mostrarClave) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (mostrarClave) "Ocultar contraseña" else "Mostrar contraseña"
+                        contentDescription = if (mostrarClave) "Ocultar" else "Mostrar"
                     )
                 }
             },
             visualTransformation = if (mostrarClave) VisualTransformation.None else PasswordVisualTransformation(),
             singleLine = true,
             enabled = !cargando,
-            isError = error != null
-        )
-
-        Text(
-            text = "Contraseña de prueba: ${PerfilesDemo.CLAVE_ACCESO}",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 6.dp),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            isError = error != null,
+            shape = RoundedCornerShape(16.dp)
         )
 
         error?.let { mensaje ->
@@ -141,23 +152,23 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp),
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
             )
         }
 
-        // 3) Primero se valida la contraseña común 1234 y después se autentica el perfil en la API.
         Button(
             onClick = {
                 if (clave.isBlank()) {
-                    error = "Escribe la contraseña del perfil seleccionado."
+                    error = "Ingresa tu contraseña."
                     return@Button
                 }
                 if (clave != PerfilesDemo.CLAVE_ACCESO) {
-                    error = "Contraseña incorrecta. Para la demo utiliza 1234."
+                    error = "Contraseña incorrecta."
                     return@Button
                 }
                 if (!hayConexionDisponible(contexto)) {
-                    error = "No hay conexión a internet. Conéctate para validar el perfil."
+                    error = "Sin conexión a internet."
                     return@Button
                 }
 
@@ -165,7 +176,6 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
                     cargando = true
                     error = null
                     try {
-                        // La clave real de Fake Store API permanece oculta para el usuario.
                         val sesion = ServicioApi.iniciarSesion(
                             perfilSeleccionado,
                             perfilSeleccionado.claveApi
@@ -180,25 +190,34 @@ fun PantallaAcceso(onAccesoCorrecto: (UsuarioSesion) -> Unit) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 18.dp)
+                .padding(top = 22.dp)
                 .height(54.dp),
             enabled = !cargando,
             shape = RoundedCornerShape(16.dp)
         ) {
             if (cargando) {
                 CircularProgressIndicator(
-                    modifier = Modifier.height(22.dp),
+                    modifier = Modifier.size(24.dp),
                     strokeWidth = 2.dp,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
-                Text("Entrar como ${perfilSeleccionado.nombreVisible}")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Ingresar"
+                    )
+                    Text("Ingresar", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
 }
 
-/** Tarjeta accesible que reemplaza el campo manual de nombre de usuario. */
+/** Tarjeta de perfil con fotografía realista generada por IA. */
 @Composable
 private fun TarjetaPerfilDemo(
     perfil: PerfilDemo,
@@ -217,22 +236,34 @@ private fun TarjetaPerfilDemo(
             }
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (seleccionado) 4.dp else 1.dp),
-        shape = RoundedCornerShape(18.dp)
+        shape = RoundedCornerShape(20.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = if (seleccionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+            Image(
+                painter = painterResource(perfil.avatarRes),
+                contentDescription = perfil.nombreVisible,
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .border(
+                        2.dp,
+                        if (seleccionado) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        CircleShape
+                    ),
+                contentScale = ContentScale.Crop
             )
             Column(modifier = Modifier.weight(1f)) {
-                Text(perfil.nombreVisible, fontWeight = FontWeight.Bold)
                 Text(
-                    perfil.descripcion,
+                    text = perfil.nombreVisible,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = perfil.descripcion,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

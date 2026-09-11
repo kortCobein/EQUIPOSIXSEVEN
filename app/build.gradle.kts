@@ -6,15 +6,22 @@ plugins {
 android {
     namespace = "com.example.equiposixseven"
     compileSdk {
-        version = release(37)
+        version = release(35)
     }
 
     defaultConfig {
         applicationId = "com.example.equiposixseven"
         minSdk = 24
-        targetSdk = 37
+        targetSdk = 35
         versionCode = 2
         versionName = "2.0-ut"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
     compileOptions {
