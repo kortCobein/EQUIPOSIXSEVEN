@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Tema base sin ActionBar: Compose dibuja toda la interfaz. -->
     <style name="Theme.EquipoSixSeven" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorAccent">@color/ut_verde</item>
+        <item name="android:statusBarColor">@color/ut_azul</item>
+        <item name="android:navigationBarColor">@color/ut_azul</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/ut_fondo</item>
+    </style>
+
+    <!-- Splash nativa con los mismos colores e icono de la app. -->
+    <style name="Theme.EquipoSixSeven.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ut_azul</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_app_icon_foreground</item>
+        <item name="windowSplashScreenAnimationDuration">500</item>
+        <item name="postSplashScreenTheme">@style/Theme.EquipoSixSeven</item>
     </style>
 </resources>
