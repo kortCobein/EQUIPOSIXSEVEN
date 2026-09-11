@@ -40,11 +40,29 @@ import androidx.compose.ui.unit.dp
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 
 /** Encabezado reutilizable con avatar con IA, toggle de tema oscuro y acceso a cerrar sesión. */
@@ -110,34 +128,182 @@ fun BarraSuperiorUT(
     )
 }
 
-/** Barra inferior que cambia automáticamente según los permisos del rol activo. */
+/**
+ * Fondo con cuadrícula tecnológica, matriz de puntos y cruces en intersecciones
+ * inspirado en el diseño del sistema visual de Portal UT.
+ */
 @Composable
-fun BarraNavegacionUT(
+fun FondoCuadriculaTecnologica(
+    modifier: Modifier = Modifier,
+    esOscuro: Boolean = false,
+    contenido: @Composable BoxScope.() -> Unit
+) {
+    val density = LocalDensity.current
+    val colorLinea = if (esOscuro) Color(0xFF00D1A7) else Color(0xFF00245A)
+    val colorPunto = if (esOscuro) Color(0xFF38BDF8) else Color(0xFF009D81)
+    val colorFondo = if (esOscuro) Color(0xFF0A1128) else Color(0xFFF4F7F9)
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colorFondo)
+            .drawBehind {
+                val ladoCelda = with(density) { 56.dp.toPx() }
+                val radioPunto = with(density) { 1.1.dp.toPx() }
+                val semiLargoCruz = with(density) { 3.5.dp.toPx() }
+                val puntosPorEje = 4
+
+                val lineaColor = colorLinea.copy(alpha = if (esOscuro) 0.08f else 0.07f)
+                val puntoColor = colorPunto.copy(alpha = if (esOscuro) 0.24f else 0.16f)
+                val cruzColor = colorLinea.copy(alpha = if (esOscuro) 0.16f else 0.14f)
+
+                val columnas = (size.width / ladoCelda).toInt() + 1
+                val filas = (size.height / ladoCelda).toInt() + 1
+
+                // 1. Líneas de la cuadrícula
+                for (c in 0..columnas) {
+                    val x = c * ladoCelda
+                    drawLine(lineaColor, Offset(x, 0f), Offset(x, size.height), 1f)
+                }
+                for (f in 0..filas) {
+                    val y = f * ladoCelda
+                    drawLine(lineaColor, Offset(0f, y), Offset(size.width, y), 1f)
+                }
+
+                // 2. Matriz de puntos dentro de cada celda
+                for (f in 0 until filas) {
+                    val origenY = f * ladoCelda
+                    for (c in 0 until columnas) {
+                        val origenX = c * ladoCelda
+                        for (py in 1..puntosPorEje) {
+                            val y = origenY + (ladoCelda * py / (puntosPorEje + 1))
+                            if (y >= size.height) continue
+                            for (px in 1..puntosPorEje) {
+                                val x = origenX + (ladoCelda * px / (puntosPorEje + 1))
+                                if (x >= size.width) continue
+                                drawCircle(puntoColor, radioPunto, Offset(x, y))
+                            }
+                        }
+                    }
+                }
+
+                // 3. Cruces técnicas en las intersecciones
+                for (f in 0..filas) {
+                    val y = f * ladoCelda
+                    for (c in 0..columnas) {
+                        val x = c * ladoCelda
+                        drawLine(cruzColor, Offset(x - semiLargoCruz, y), Offset(x + semiLargoCruz, y), 1.5f)
+                        drawLine(cruzColor, Offset(x, y - semiLargoCruz), Offset(x, y + semiLargoCruz), 1.5f)
+                    }
+                }
+            }
+    ) {
+        contenido()
+    }
+}
+
+/** Barra inferior flotante en cápsula con selector deslizante animado estilo Portal UT. */
+@Composable
+fun BarraNavegacionFlotanteUT(
     sesion: UsuarioSesion,
     seccionActual: SeccionAplicacion,
+    modoOscuro: Boolean,
     onSeleccionar: (SeccionAplicacion) -> Unit
 ) {
-    val opciones = buildList {
-        add(OpcionNavegacion("Catálogo", Icons.Default.Home, SeccionAplicacion.CATALOGO))
-        if (sesion.rol != RolUsuario.AUDITOR) {
-            add(OpcionNavegacion("Carrito", Icons.Default.ShoppingCart, SeccionAplicacion.CARRITO))
-        }
-        if (sesion.rol == RolUsuario.ADMINISTRADOR) {
-            add(OpcionNavegacion("Inventario", Icons.Default.AdminPanelSettings, SeccionAplicacion.INVENTARIO))
-        }
-        if (sesion.rol == RolUsuario.ADMINISTRADOR || sesion.rol == RolUsuario.AUDITOR) {
-            add(OpcionNavegacion("Auditoría", Icons.Default.Assessment, SeccionAplicacion.AUDITORIA))
+    val opciones = remember(sesion.rol) {
+        buildList {
+            add(OpcionNavegacion("Catálogo", Icons.Default.Home, SeccionAplicacion.CATALOGO))
+            if (sesion.rol != RolUsuario.AUDITOR) {
+                add(OpcionNavegacion("Carrito", Icons.Default.ShoppingCart, SeccionAplicacion.CARRITO))
+            }
+            if (sesion.rol == RolUsuario.ADMINISTRADOR) {
+                add(OpcionNavegacion("Inventario", Icons.Default.AdminPanelSettings, SeccionAplicacion.INVENTARIO))
+            }
+            if (sesion.rol == RolUsuario.ADMINISTRADOR || sesion.rol == RolUsuario.AUDITOR) {
+                add(OpcionNavegacion("Auditoría", Icons.Default.Assessment, SeccionAplicacion.AUDITORIA))
+            }
         }
     }
 
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-        opciones.forEach { opcion ->
-            NavigationBarItem(
-                selected = seccionActual == opcion.seccion,
-                onClick = { onSeleccionar(opcion.seccion) },
-                icon = { Icon(opcion.icono, contentDescription = opcion.etiqueta) },
-                label = { Text(opcion.etiqueta) }
+    val totalElementos = opciones.size
+    val indiceActual = opciones.indexOfFirst { it.seccion == seccionActual }.coerceAtLeast(0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(30.dp),
+                    spotColor = Color(0xFF00245A).copy(alpha = 0.28f),
+                    ambientColor = Color(0xFF00245A).copy(alpha = 0.12f)
+                )
+                .clip(RoundedCornerShape(30.dp))
+                .background(if (modoOscuro) Color(0xFF101C33) else Color.White)
+                .border(
+                    width = 1.dp,
+                    color = if (modoOscuro) Color(0xFF1E2F52) else Color(0xFFE2E8F0),
+                    shape = RoundedCornerShape(30.dp)
+                )
+                .padding(4.dp)
+        ) {
+            val anchoPestana = maxWidth / totalElementos
+            val desplazamientoAnimado by animateDpAsState(
+                targetValue = anchoPestana * indiceActual,
+                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+                label = "nav_slide"
             )
+
+            // Pastilla indicadora deslizante con animación suave
+            Box(
+                modifier = Modifier
+                    .offset(x = desplazamientoAnimado)
+                    .width(anchoPestana)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(
+                        if (modoOscuro) Color(0xFF00D1A7) else Color(0xFF00245A)
+                    )
+            )
+
+            // Íconos interactivos
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                opciones.forEach { opcion ->
+                    val seleccionado = opcion.seccion == seccionActual
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { onSeleccionar(opcion.seccion) }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = opcion.icono,
+                            contentDescription = opcion.etiqueta,
+                            tint = when {
+                                seleccionado && modoOscuro -> Color(0xFF0A1128)
+                                seleccionado && !modoOscuro -> Color.White
+                                modoOscuro -> Color(0xFF94A3B8)
+                                else -> Color(0xFF64748B)
+                            },
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
