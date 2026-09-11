@@ -26,11 +26,11 @@ Aplicación Android desarrollada en **Kotlin + Jetpack Compose** que integra las
 
 El login ya no pide nombre de usuario. Selecciona el perfil y escribe únicamente la contraseña común de demostración:
 
-| Perfil | Usuario interno | ID | Contraseña demo | Acceso |
-|---|---|---:|---|---|
-| Administrador | `johnd` | 1 | `1234` | catálogo, carrito, inventario y auditoría |
-| Cliente | `donero` | 4 | `1234` | catálogo y carrito |
-| Auditor | `kevinryan` | 3 | `1234` | catálogo y auditoría en solo lectura |
+| Perfil        | Usuario interno |  ID | Contraseña demo | Acceso                                    |
+| ------------- | --------------- | --: | --------------- | ----------------------------------------- |
+| Administrador | `johnd`         |   1 | `1234`          | catálogo, carrito, inventario y auditoría |
+| Cliente       | `donero`        |   4 | `1234`          | catálogo y carrito                        |
+| Auditor       | `kevinryan`     |   3 | `1234`          | catálogo y auditoría en solo lectura      |
 
 > Para los tres perfiles la contraseña visible es **`1234`**. Las credenciales reales de Fake Store API se mantienen encapsuladas dentro de la aplicación únicamente para obtener el token remoto; el usuario nunca tiene que escribirlas. La app no guarda la contraseña de demostración y persiste solamente token, ID, username y rol.
 
@@ -79,3 +79,5 @@ Ruta: `app/src/main/java/com/example/equiposixseven/`
 ## Nota sobre Fake Store API
 
 Fake Store API está diseñada para práctica. Los endpoints `POST`, `PUT` y `DELETE` pueden responder correctamente sin persistir los cambios de manera permanente en el servidor. Por eso la app sincroniza la petición y también refleja la operación en el estado local durante la sesión.
+
+EDICION DE PRUEBA DE README DE KURT
