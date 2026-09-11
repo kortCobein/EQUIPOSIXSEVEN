@@ -80,4 +80,4 @@ Ruta: `app/src/main/java/com/example/equiposixseven/`
 
 Fake Store API está diseñada para práctica. Los endpoints `POST`, `PUT` y `DELETE` pueden responder correctamente sin persistir los cambios de manera permanente en el servidor. Por eso la app sincroniza la petición y también refleja la operación en el estado local durante la sesión.
 
-EDICION DE PRUEBA DE README DE KURT
+
